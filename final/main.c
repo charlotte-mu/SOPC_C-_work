@@ -4,7 +4,7 @@
 #include <time.h>
 #include <windows.h>
 #define size 20
-#define time_reg 100
+#define time_reg 300
 
 void gotoxy(int xpos, int ypos);
 void print(int ,int);
@@ -93,9 +93,11 @@ int main(int argc, char *argv[]) {
 			printf("最佳路徑步數%d\n",ans_reg);
 			system("pause");
 		}
-	}
-	if(ans==0){
-		printf("00000000");
+		if(ans==0){
+			gotoxy(0,size_in*2+4);
+			printf("erro-沒有路徑\n");
+			system("pause");
+		}
 	}
 	//print_test(size_in);
 	//system("pause");
