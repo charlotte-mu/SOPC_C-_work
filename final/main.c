@@ -147,7 +147,7 @@ void from_to(int x,int y,int x_to,int y_to,int cmd,int step,int *ans,int *ans_re
 				SetConsoleTextAttribute(hConsole,FOREGROUND_GREEN);
 			}
 			else{
-				SetConsoleTextAttribute(hConsole,FOREGROUND_BLUE);
+				SetConsoleTextAttribute(hConsole,FOREGROUND_BLUE+2);
 			}
 			
 		}
@@ -285,7 +285,7 @@ void print(int cmd){
 	for(y=0;y<size_in*2+1;y++){
 		for(x=size_in*2;x>=0;x--){
 			if((cmd==0)?data[y][x]==5 : data_reg[y][x]==5){
-				SetConsoleTextAttribute(hConsole,FOREGROUND_BLUE);
+				SetConsoleTextAttribute(hConsole,FOREGROUND_BLUE+2);
 				printf("@");
 				SetConsoleTextAttribute(hConsole,saved_sttributes);
 			}
