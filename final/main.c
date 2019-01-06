@@ -7,15 +7,16 @@
 #define time_reg 300
 
 void gotoxy(int xpos, int ypos);
-void print(int ,int);
+void print(int);
 void clear(int );
-void random_number(int );
-void print_test(int );
-void from_to(int ,int ,int ,int ,int ,int ,int ,int* ,int*,int ,int);
-void d_bug(int ,int* ,int*);
+void random_number(void);
+void print_test(void);
+void from_to(int ,int ,int ,int ,int ,int ,int* ,int*,int ,int,int ,int ,int);
+void d_bug(int* ,int*);
 void delay(void);
 
 int data[size*2+1][size*2+1],data_reg[size*2+1][size*2+1];
+int size_in;
 
 int main(int argc, char *argv[]) {
 	
@@ -25,10 +26,13 @@ int main(int argc, char *argv[]) {
 	GetConsoleScreenBufferInfo(hConsole, &csbiInfo);
 	saved_sttributes = csbiInfo.wAttributes;
 	
+	clock_t start, end;
+	double cpu_time_used;
+	
 	srand(time(NULL));
-	int size_in;
 	int x_from,y_from;
 	int x_to,y_to;
+	int x_buffer,y_buffer;
 	int cmd;
 	int ans,ans_reg;
 	clear(1);
@@ -39,10 +43,14 @@ int main(int argc, char *argv[]) {
 			printf("輸入矩陣大小erro\n");
 		}
 	}while(size_in<=0 || size_in>size);
-	random_number(size_in);
-	d_bug(size_in,&ans,&ans_reg);
-	print(size_in,0);
+	random_number();
+	start = clock();
+	d_bug(&ans,&ans_reg);
+	end = clock();
+	print(0);
 	//print_test(size_in);
+	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("計算時間=%f\n", cpu_time_used);
 	do{
 		printf("請輸入起點(x,y):");
 		scanf("%d %d",&x_from,&y_from);
@@ -50,6 +58,13 @@ int main(int argc, char *argv[]) {
 			printf("輸入座標erro\n");
 		}
 	}while(x_from<0 || x_from>=size_in || y_from<0 || y_from>=size_in);
+	do{
+		printf("請輸入中繼點(x,y):");
+		scanf("%d %d",&x_buffer,&y_buffer);
+		if(x_buffer<0 || x_buffer>=size_in || y_buffer<0 || y_buffer>=size_in){
+			printf("輸入座標erro\n");
+		}
+	}while(x_buffer<0 || x_buffer>=size_in || y_buffer<0 || y_buffer>=size_in);
 	do{
 		printf("請輸入終點(x,y):");
 		scanf("%d %d",&x_to,&y_to);
@@ -59,16 +74,19 @@ int main(int argc, char *argv[]) {
 	}while(x_to<0 || x_to>=size_in || y_to<0 || y_to>=size_in);
 	
 	ans_reg = size_in*size_in;
-	data[y_from*2+1][x_from*2+1]=2;
 	ans = 0;
 	printf("系統忙錄中，請稍後...\n");
-	from_to(x_from*2+1,y_from*2+1,size_in,x_to,y_to,2,0,&ans,&ans_reg,x_from,y_from);
-	data[y_from*2+1][x_from*2+1]=3;
+	start = clock();
+	from_to(x_from*2+1,y_from*2+1,x_to,y_to,2,0,&ans,&ans_reg,x_from,y_from, x_buffer, y_buffer,0);
+	end = clock();
+	cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("計算時間=%f\n", cpu_time_used);
+	system("pause");
 	
 	while(1){
 		do{
 			system("cls");
-			print(size_in,0);
+			print(0);
 			printf("1:顯示全部路徑  2:顯示最佳路徑  3:結束\n");
 			scanf("%d",&cmd);
 			if(cmd<1 || cmd>3){
@@ -79,17 +97,15 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		else if(cmd==1){
-			data[y_from*2+1][x_from*2+1]=2;
 			ans = 0;
 			gotoxy((size_in-x_from)*4+1,y_from*2+1+1);
 			SetConsoleTextAttribute(hConsole,FOREGROUND_GREEN);
 			printf("@");
 			SetConsoleTextAttribute(hConsole,saved_sttributes);
-			from_to(x_from*2+1,y_from*2+1,size_in,x_to,y_to,3,0,&ans,&ans_reg,x_from,y_from);
-			data[y_from*2+1][x_from*2+1]=3;
+			from_to(x_from*2+1,y_from*2+1,x_to,y_to,3,0,&ans,&ans_reg,x_from,y_from, x_buffer, y_buffer,0);
 		}
 		else if(cmd==2){
-			print(size_in,1);
+			print(1);
 			printf("最佳路徑步數%d\n",ans_reg);
 			system("pause");
 		}
@@ -104,20 +120,21 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void from_to(int x,int y,int size_in,int x_to,int y_to,int cmd,int step,int *ans,int *ans_reg,int x_from,int y_from){
+void from_to(int x,int y,int x_to,int y_to,int cmd,int step,int *ans,int *ans_reg,int x_from,int y_from,int x_buffer,int y_buffer,int key){
 	
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	WORD saved_sttributes;
 	CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
 	GetConsoleScreenBufferInfo(hConsole, &csbiInfo);
 	saved_sttributes = csbiInfo.wAttributes;
+	int i,j;
 	
 	if(cmd==0 && *ans!=0){
 		return;
 	}
 	else if(cmd == 1){
 		system("cls");
-		print(size_in,0);
+		print(0);
 	}
 	else if(cmd==3){
 		delay();
@@ -126,91 +143,93 @@ void from_to(int x,int y,int size_in,int x_to,int y_to,int cmd,int step,int *ans
 			SetConsoleTextAttribute(hConsole,FOREGROUND_RED);
 		}
 		else{
-			SetConsoleTextAttribute(hConsole,FOREGROUND_GREEN);
+			if(key==0){
+				SetConsoleTextAttribute(hConsole,FOREGROUND_GREEN);
+			}
+			else{
+				SetConsoleTextAttribute(hConsole,FOREGROUND_BLUE);
+			}
+			
 		}
 		printf("@");
 		SetConsoleTextAttribute(hConsole,saved_sttributes);
 	}
-	if(x==x_to*2+1 && y==y_to*2+1){
-		if(cmd==1 || cmd==3){
+	if((key==1)? (x==x_to*2+1 && y==y_to*2+1) : (x==x_buffer*2+1 && y==y_buffer*2+1)){
+		if(key==0){
+			data[y][x] = 2;
+			key = 1;
+		}
+		else{
+			data[y][x] = 4;
+			if(cmd==1 || cmd==3){
+				if(cmd==3){
+					gotoxy(0,size_in*2+4);
+					printf("                                   \n");
+					printf("                                   \n");
+					gotoxy(0,size_in*2+4);
+				}
+				printf("此路徑步數%d，最佳路徑步數%d\n",step,*ans_reg);
+				system("pause");
+			}
+			else if(cmd==2){
+				if(step<*ans_reg){
+					*ans_reg = step;
+					//memcpy(data_reg, data, sizeof(data_reg));
+					for(i=0;i<size_in*2+1;i++){
+						for(j=0;j<size_in*2+1;j++){
+							if(data_reg[i][j]!=2){
+								data_reg[i][j] = data[i][j];
+							}
+						}
+					}
+				}
+			}
+			*ans = *ans + 1;
 			if(cmd==3){
-				gotoxy(0,size_in*2+4);
-				printf("                                   \n");
-				printf("                                   \n");
-				gotoxy(0,size_in*2+4);
+				gotoxy((size_in-(x_from))*4+1,y_from*2+1+1);
+				printf(" ");
 			}
-			printf("此路徑步數%d，最佳路徑步數%d\n",step,*ans_reg);
-			system("pause");
+			data[y][x] = 3;
+			return;
 		}
-		else if(cmd==2){
-			if(step<*ans_reg){
-				*ans_reg = step;
-				memcpy(data_reg, data, sizeof(data_reg));
-			}
+	}
+	else{
+		if(key==0){
+			data[y][x] = 2;
 		}
-		*ans = *ans + 1;
-		if(cmd==3){
-			gotoxy((size_in-(x_from))*4+1,y_from*2+1+1);
-			printf(" ");
+		else{
+			data[y][x] = 5;
 		}
-		return;
 	}
 	if(x>0){
-		if(data[y][x+1]==0 && data[y][x+2] != 2){
-			if(x+2==x_to*2+1 && y==y_to*2+1){
-				data[y][x+2] = 4;
-			}
-			else{
-				data[y][x+2] = 2;
-			}
-			from_to(x+2,y,size_in,x_to,y_to,cmd,step+1,ans,ans_reg,x_from+1,y_from);
-			data[y][x+2] = 3;
+		if(data[y][x+1]==0 && data[y][x+2] != 2 && data[y][x+2] != 5){
+			from_to(x+2,y,x_to,y_to,cmd,step+1,ans,ans_reg,x_from+1,y_from,x_buffer,y_buffer,key);
 		}
 	}
 	if(x<size_in*2+1){
-		if(data[y][x-1]==0 && data[y][x-2] != 2){
-			if(x-2==x_to*2+1 && y==y_to*2+1){
-				data[y][x-2] = 4;
-			}
-			else{
-				data[y][x-2] = 2;
-			}
-			from_to(x-2,y,size_in,x_to,y_to,cmd,step+1,ans,ans_reg,x_from-1,y_from);
-			data[y][x-2] = 3;
+		if(data[y][x-1]==0 && data[y][x-2] != 2 && data[y][x-2] != 5){
+			from_to(x-2,y,x_to,y_to,cmd,step+1,ans,ans_reg,x_from-1,y_from,x_buffer,y_buffer,key);
 		}
 	}
 	if(y>0){
-		if(data[y+1][x]==0 && data[y+2][x] != 2){
-			if(x==x_to*2+1 && y+2==y_to*2+1){
-				data[y+2][x] = 4;
-			}
-			else{
-				data[y+2][x] = 2;
-			}
-			from_to(x,y+2,size_in,x_to,y_to,cmd,step+1,ans,ans_reg,x_from,y_from+1);
-			data[y+2][x] = 3;
+		if(data[y+1][x]==0 && data[y+2][x] != 2 && data[y+2][x] != 5){
+			from_to(x,y+2,x_to,y_to,cmd,step+1,ans,ans_reg,x_from,y_from+1,x_buffer,y_buffer,key);
 		}
 	}
 	if(y<size_in*2+1){
-		if(data[y-1][x]==0 && data[y-2][x] != 2){
-			if(x==x_to*2+1 && y-2==y_to*2+1){
-				data[y-2][x] = 4;
-			}
-			else{
-				data[y-2][x] = 2;
-			}
-			from_to(x,y-2,size_in,x_to,y_to,cmd,step+1,ans,ans_reg,x_from,y_from-1);
-			data[y-2][x] = 3;
+		if(data[y-1][x]==0 && data[y-2][x] != 2 && data[y-2][x] != 5){
+			from_to(x,y-2,x_to,y_to,cmd,step+1,ans,ans_reg,x_from,y_from-1,x_buffer,y_buffer,key);
 		}
 	}
 	if(cmd==3){
 		gotoxy((size_in-(x_from))*4+1,y_from*2+1+1);
 		printf(" ");
 	}
+	data[y][x] = 3;
 	return;
 }
 
-void random_number(int size_in){
+void random_number(void){
 	//srand(time(NULL));
 	clear(0);
 	int x,y;
@@ -228,27 +247,27 @@ void random_number(int size_in){
 		}
 	}
 }
-void d_bug(int size_in,int *ans,int *ans_reg){
+void d_bug(int *ans,int *ans_reg){
 	printf("系統忙錄中，請稍後...");
 	do{
-		srand(time(NULL));
+		//srand(time(NULL));
 		do{
 			*ans = 0;
-			from_to(1,1,size_in,size_in-1,size_in-1,0,0,ans,ans_reg,0,0);
+			from_to(1,1,size_in-1,size_in-1,0,0,ans,ans_reg,0,0,0,0,1);
 			if(*ans==0){
-				random_number(size_in);
+				random_number();
 			}
 		}while(*ans==0);
 		*ans = 0;
-		from_to(1,size_in*2-1,size_in,size_in-1,1,0,0,ans,ans_reg,0,0);
+		from_to(1,size_in*2-1,size_in-1,1,0,0,ans,ans_reg,0,0,0,0,1);
 		if(*ans==0){
-			random_number(size_in);
+			random_number();
 		}
 	}while(*ans==0);
 	system("cls");
 }
 
-void print(int size_in,int cmd){
+void print(int cmd){
 
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	WORD saved_sttributes;
@@ -265,7 +284,12 @@ void print(int size_in,int cmd){
 	printf("\n");
 	for(y=0;y<size_in*2+1;y++){
 		for(x=size_in*2;x>=0;x--){
-			if((cmd==0)?data[y][x]==2 : data_reg[y][x]==2){
+			if((cmd==0)?data[y][x]==5 : data_reg[y][x]==5){
+				SetConsoleTextAttribute(hConsole,FOREGROUND_BLUE);
+				printf("@");
+				SetConsoleTextAttribute(hConsole,saved_sttributes);
+			}
+			else if((cmd==0)?data[y][x]==2 : data_reg[y][x]==2){
 				SetConsoleTextAttribute(hConsole,FOREGROUND_GREEN);
 				printf("@");
 				SetConsoleTextAttribute(hConsole,saved_sttributes);
@@ -364,7 +388,7 @@ void clear(int cmd){
 		}
 	}
 }
-void print_test(int size_in){
+void print_test(void){
 	int x,y;
 	printf("\n");
 	for(y=0;y<size_in*2+1;y++){
